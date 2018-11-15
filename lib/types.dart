@@ -6,8 +6,8 @@ class Coords {
 }
 
 class Size {
-  final int width;
-  final int height;
+  int width;
+  int height;
   Size({this.width, this.height});
 }
 
@@ -24,11 +24,18 @@ class RangeChangedEvent implements VSEvent {
   final int last;
   final int num;
   final bool stable;
-  RangeChangedEvent({this.first, this.last, this.num, this.stable = false});
+  final bool remeasure;
+  RangeChangedEvent({
+    this.first,
+    this.last,
+    this.num,
+    this.stable = false,
+    this.remeasure = false,
+  });
 }
 
 class ItemPositionChangedEvent implements VSEvent {
-  Map<int, int> indexToPos = {};
+  Map<int, Coords> indexToPos = {};
   ItemPositionChangedEvent(this.indexToPos);
 }
 
@@ -50,3 +57,5 @@ class Margin {
     this.marginLeft,
   });
 }
+
+class ScrollEvent implements VSEvent {}

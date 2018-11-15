@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:html';
 import 'dart:math' as math;
 
@@ -10,6 +11,7 @@ typedef Element UpdateElement(Element child, int idx);
 typedef Element RecycleElement(Element child, int idx);
 
 class _RepeatsAndScrolls extends _Repeats {
+  StreamSubscription _layoutSubscription;
   ResizeObserver _childrenRO;
   bool _skipNextChildrenSizeChanged = false;
   bool _needsUpdateView;
@@ -18,7 +20,7 @@ class _RepeatsAndScrolls extends _Repeats {
   var _sizer;
   var _scrollSize;
   var _scrollErr;
-  var _childrenPos;
+  Map<int, Coords> _childrenPos;
   Element _containerElement;
   var _containerInlineStyle;
   Size _containerSize;
@@ -58,6 +60,12 @@ class _RepeatsAndScrolls extends _Repeats {
       var rect = entries[0].contentRect;
       _containerSizeChanged(Size(width: rect.width, height: rect.height));
     });
+
+    this.container = container;
+    this.createElement = createElement;
+    this.updateElement = updateElement;
+    this.recycleElement = recycleElement;
+    this.layout = layout;
   }
 
   get container {
@@ -88,18 +96,18 @@ class _RepeatsAndScrolls extends _Repeats {
       }
       this._containerInlineStyle = null;
       if (oldEl == this._scrollTarget) {
-        oldEl.removeEventListener('scroll', this.handleEvent);
+        oldEl.removeEventListener('scroll', this.handleScrollEvent);
         this._sizer && this._sizer.remove();
       }
     } else {
       // First time container was setup, add listeners only now.
-      document.addEventListener('scroll', this.handleEvent);
+      document.addEventListener('scroll', this.handleScrollEvent);
     }
 
     this._containerElement = newEl;
 
-    if (newEl) {
-      this._containerInlineStyle = newEl.getAttribute('style') || null;
+    if (newEl != null) {
+      this._containerInlineStyle = newEl.getAttribute('style');
       if (newEl == this._scrollTarget) {
         this._sizer = this._sizer || this._createContainerSizer();
         this._container.prepend(this._sizer);
@@ -122,6 +130,7 @@ class _RepeatsAndScrolls extends _Repeats {
       this._measureCallback = null;
 
       // TODO: Layout can't extend EventTarget
+      _layoutSubscription?.cancel();
 //      this._layout.removeEventListener('scrollsizechange', this);
 //      this._layout.removeEventListener('scrollerrorchange', this);
 //      this._layout.removeEventListener('itempositionchange', this);
@@ -136,11 +145,12 @@ class _RepeatsAndScrolls extends _Repeats {
 
     if (this._layout != null) {
       // TODO: layout.updateItemSizes
-//      if (this._layout.updateItemSizes.runtimeType == Function) {
-//        this._measureCallback = this._layout.updateItemSizes.bind(this._layout);
-//        this.requestRemeasure();
-//      }
+      if (this._layout.hasUpdateItemSizesFn) {
+        this._measureCallback = this._layout.updateItemSizes;
+        this.requestRemeasure();
+      }
       // TODO: Layout can't extend EventTarget
+      _layoutSubscription = _layout.onEvent.listen(handleEvent);
 //      this._layout.addEventListener('scrollsizechange', this);
 //      this._layout.addEventListener('scrollerrorchange', this);
 //      this._layout.addEventListener('itempositionchange', this);
@@ -171,7 +181,7 @@ class _RepeatsAndScrolls extends _Repeats {
       return;
     }
     if (this._scrollTarget != null) {
-      this._scrollTarget.removeEventListener('scroll', this.handleEvent);
+      this._scrollTarget.removeEventListener('scroll', this.handleScrollEvent);
       if (this._sizer && this._scrollTarget == this._containerElement) {
         this._sizer.remove();
       }
@@ -179,8 +189,8 @@ class _RepeatsAndScrolls extends _Repeats {
 
     this._scrollTarget = target;
 
-    if (target) {
-      target.addEventListener('scroll', this);
+    if (target != null) {
+      target.addEventListener('scroll', this.handleScrollEvent);
       if (target == this._containerElement) {
         this._sizer = this._sizer || this._createContainerSizer();
         this._container.prepend(this._sizer);
@@ -204,7 +214,7 @@ class _RepeatsAndScrolls extends _Repeats {
     this._layout.reflowIfNeeded();
     // Keep rendering until there is no more scheduled renders.
     while (true) {
-      if (this._pendingRender) {
+      if (this._pendingRender != null) {
         window.cancelAnimationFrame(this._pendingRender);
         this._pendingRender = null;
       }
@@ -220,7 +230,7 @@ class _RepeatsAndScrolls extends _Repeats {
       super._render();
       this._layout.reflowIfNeeded();
       // If layout reflow did not provoke another render, we're done.
-      if (!this._pendingRender) {
+      if (this._pendingRender == null) {
         break;
       }
     }
@@ -236,37 +246,45 @@ class _RepeatsAndScrolls extends _Repeats {
    * @protected
    */
   _didRender() {
-    if (this._childrenPos) {
+    if (this._childrenPos != null) {
       this._positionChildren(this._childrenPos);
       this._childrenPos = null;
     }
+  }
+
+  handleScrollEvent(event) {
+            if (this._scrollTarget == null || event.target == this._scrollTarget) {
+          this._scheduleUpdateView();
+        }
   }
 
   /**
    * @param {!Event} event
    * @private
    */
-  handleEvent(event) {
-    switch (event.type) {
-      case 'scroll':
-        if (this._scrollTarget == null || event.target == this._scrollTarget) {
-          this._scheduleUpdateView();
-        }
-        break;
-      case 'scrollsizechange':
-        this._scrollSize = event.detail;
+  handleEvent(VSEvent event) {
+    switch (event.runtimeType) {
+      // moved to handleScrollEvent
+//      case ScrollEvent:
+//        if (this._scrollTarget == null || event.target == this._scrollTarget) {
+//          this._scheduleUpdateView();
+//        }
+//        break;
+      case ScrollSizeChangedEvent:
+        var evt = (event as ScrollSizeChangedEvent);
+        this._scrollSize = Size(width: evt.width, height: evt.height);
         this._scheduleRender();
         break;
-      case 'scrollerrorchange':
-        this._scrollErr = event.detail;
+//      case ScrollErr:
+//        this._scrollErr = event.detail;
+//        this._scheduleRender();
+//        break;
+      case ItemPositionChangedEvent:
+        this._childrenPos = (event as ItemPositionChangedEvent).indexToPos;
         this._scheduleRender();
         break;
-      case 'itempositionchange':
-        this._childrenPos = event.detail;
-        this._scheduleRender();
-        break;
-      case 'rangechange':
-        this._adjustRange(event.detail);
+      case RangeChangedEvent:
+        this._adjustRange((event as RangeChangedEvent));
         break;
       default:
         print('event not handled $event');
@@ -360,15 +378,15 @@ class _RepeatsAndScrolls extends _Repeats {
       this._sizer.style.transform = 'translate(${left}px, ${top}px)';
     } else {
       var style = this._containerElement.style;
-      style.minWidth = size && size.width ? size.width + 'px' : null;
-      style.minHeight = size && size.height ? size.height + 'px' : null;
+      style.minWidth = size != null && size.width ? size.width + 'px' : null;
+      style.minHeight = size != null && size.height ? size.height + 'px' : null;
     }
   }
 
   /**
    * @private
    */
-  _positionChildren(pos) {
+  _positionChildren(Map<int, Coords> pos) {
     // TODO
 //    var kids = this._kids;
 //    Object.keys(pos).forEach(key => {
@@ -380,12 +398,21 @@ class _RepeatsAndScrolls extends _Repeats {
 //    child.style.transform = `translate(${left}px, ${top}px)`;
 //    }
 //    });
+    var kids = this._kids;
+    pos.forEach((k, v) {
+      var idx = k - this._first;
+      var child = v;
+      if (child != null) {
+        var top = pos[k].top;
+        var left = pos[k].left;
+      }
+    });
   }
 
   /**
    * @private
    */
-  _adjustRange(range) {
+  _adjustRange(RangeChangedEvent range) {
     this.num = range.num;
     this.first = range.first;
     this._incremental = !(range.stable);
@@ -467,7 +494,7 @@ class _Repeats {
   var _recycleElementFn = null;
   var _elementKeyFn = null;
 
-  var _measureCallback = null;
+  Function _measureCallback = null;
 
   var _totalItems = 0;
   // Consider renaming this. count? visibleElements?
@@ -509,14 +536,14 @@ class _Repeats {
       return;
     }
 
-    if (this._container) {
+    if (this._container != null) {
       // Remove children from old container.
       this._ordered.forEach((child) => this._removeChild(child));
     }
 
     this._container = container;
 
-    if (container) {
+    if (container != null) {
       // Insert children in new container.
       this._ordered.forEach((child) => this._insertBefore(child, null));
     } else {
@@ -605,7 +632,7 @@ class _Repeats {
     return this._totalItems;
   }
 
-  set totalItems(num) {
+  set totalItems(int num) {
     // TODO(valdrin) should we check if it is a finite number?
     // Technically, Infinity would break Layout, not VirtualRepeater.
     if (num != this._totalItems) {
@@ -642,14 +669,14 @@ class _Repeats {
    * @protected
    */
   _shouldRender() {
-    return this.container && this.createElement;
+    return this.container != null && this.createElement != null;
   }
 
   /**
    * @private
    */
   _scheduleRender() {
-    if (!this._pendingRender) {
+    if (this._pendingRender == null) {
       this._pendingRender = window.requestAnimationFrame((_) {
         this._pendingRender = null;
         if (this._shouldRender()) {
@@ -708,7 +735,7 @@ class _Repeats {
       }
     }
 
-    var mm = <int, dynamic>{};
+    var mm = <int, Rectangle>{};
     for (var i = 0; i < pm.length; i++) {
       var cur = pm[i];
       mm[toMeasure.indices[i]] =
@@ -744,7 +771,7 @@ class _Repeats {
     // Retrieve DOM to be measured.
     // Do it right before cleanup and reset of properties.
     var shouldMeasure = this._num > 0 &&
-        this._measureCallback &&
+        this._measureCallback != null &&
         (rangeChanged || this._needsRemeasure || this._needsReset);
     var toMeasure = shouldMeasure ? this._toMeasure : null;
 
