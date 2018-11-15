@@ -1,3 +1,4 @@
+// TODO: rename to Offset
 class Coords {
   final int left;
   final int top;
@@ -10,9 +11,7 @@ class Size {
   Size({this.width, this.height});
 }
 
-class VSEvent {
-
-}
+class VSEvent {}
 
 class ScrollSizeChangedEvent implements VSEvent {
   int height;
@@ -31,4 +30,23 @@ class RangeChangedEvent implements VSEvent {
 class ItemPositionChangedEvent implements VSEvent {
   Map<int, int> indexToPos = {};
   ItemPositionChangedEvent(this.indexToPos);
+}
+
+class ToMeasure {
+  List indices;
+  List children;
+  ToMeasure({this.indices, this.children});
+}
+
+class Margin {
+  int marginTop;
+  int marginRight;
+  int marginBottom;
+  int marginLeft;
+  Margin({
+    this.marginTop,
+    this.marginRight,
+    this.marginBottom,
+    this.marginLeft,
+  });
 }
