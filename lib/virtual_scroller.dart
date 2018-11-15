@@ -452,11 +452,11 @@ class _RepeatsAndScrolls extends _Repeats {
    * @protected
    */
   _notifyStable() {
-//    var {first, num} = this;
-    var first = this.first;
-    var num = this.num;
-    var last = first + num - 1;
     // TODO: dispatch event
+//    var {first, num} = this;
+//    var first = this.first;
+//    var num = this.num;
+//    var last = first + num - 1;
 //    this._container.dispatchEvent(
 //        new Event('rangechange'), {'first': first, 'last': last});
   }
@@ -1018,9 +1018,6 @@ class _Repeats {
     var width = rect.width;
     var height = rect.height;
     var margins = getMargins(child);
-    var result =
-        Rectangle(margins.marginLeft, margins.marginRight, width, height);
-//    print("measureChild = $result");
     return Metrics(
       marginLeft: margins.marginLeft,
       marginRight: margins.marginRight,

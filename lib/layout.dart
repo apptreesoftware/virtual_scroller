@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:html';
 import 'dart:math' as math;
 import 'package:virtual_scroller/types.dart';
 
@@ -391,7 +390,6 @@ class Layout1dBase {
   var _sizeDim = 'height';
   var _secondarySizeDim = 'width';
   var _positionDim = 'top';
-  var _secondaryPositionDim = 'left';
   var _direction = 'vertical';
 
   int _scrollPosition = 0;
@@ -449,7 +447,6 @@ class Layout1dBase {
       this._sizeDim = (dir == 'horizontal') ? 'width' : 'height';
       this._secondarySizeDim = (dir == 'horizontal') ? 'height' : 'width';
       this._positionDim = (dir == 'horizontal') ? 'left' : 'top';
-      this._secondaryPositionDim = (dir == 'horizontal') ? 'top' : 'left';
       this._scheduleReflow();
     }
   }
@@ -728,6 +725,7 @@ class Layout1dBase {
 
   Coords _getItemPosition(idx) {
     // Override.
+    return null;
   }
 
   _getItemSize(idx) {
