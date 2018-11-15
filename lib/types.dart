@@ -1,8 +1,11 @@
 // TODO: rename to Offset
+import 'package:meta/meta.dart';
+
 class Coords {
   final int left;
   final int top;
   Coords({this.left, this.top});
+  String toString() => "[left $left, top $top]";
 }
 
 class Size {
@@ -23,8 +26,8 @@ class RangeChangedEvent implements VSEvent {
   final int first;
   final int last;
   final int num;
-  final bool stable;
-  final bool remeasure;
+  bool stable;
+  bool remeasure;
   RangeChangedEvent({
     this.first,
     this.last,
@@ -42,7 +45,10 @@ class ItemPositionChangedEvent implements VSEvent {
 class ToMeasure {
   List indices;
   List children;
-  ToMeasure({this.indices, this.children});
+  ToMeasure({
+    @required this.indices,
+    @required this.children,
+  });
 }
 
 class Margin {

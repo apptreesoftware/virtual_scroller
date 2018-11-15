@@ -17,7 +17,7 @@ class _RepeatsAndScrolls extends _Repeats {
   bool _needsUpdateView;
   Layout1dBase _layout;
   Element _scrollTarget;
-  var _sizer;
+  Element _sizer;
   var _scrollSize;
   var _scrollErr;
   Map<int, Coords> _childrenPos;
@@ -97,7 +97,7 @@ class _RepeatsAndScrolls extends _Repeats {
       this._containerInlineStyle = null;
       if (oldEl == this._scrollTarget) {
         oldEl.removeEventListener('scroll', this.handleScrollEvent);
-        this._sizer && this._sizer.remove();
+        if (this._sizer != null) this._sizer.remove();
       }
     } else {
       // First time container was setup, add listeners only now.
@@ -109,7 +109,7 @@ class _RepeatsAndScrolls extends _Repeats {
     if (newEl != null) {
       this._containerInlineStyle = newEl.getAttribute('style');
       if (newEl == this._scrollTarget) {
-        this._sizer = this._sizer || this._createContainerSizer();
+        this._sizer = this._sizer ?? this._createContainerSizer();
         this._container.prepend(this._sizer);
       }
       this._scheduleUpdateView();
@@ -182,7 +182,7 @@ class _RepeatsAndScrolls extends _Repeats {
     }
     if (this._scrollTarget != null) {
       this._scrollTarget.removeEventListener('scroll', this.handleScrollEvent);
-      if (this._sizer && this._scrollTarget == this._containerElement) {
+      if (this._sizer != null && this._scrollTarget == this._containerElement) {
         this._sizer.remove();
       }
     }
@@ -192,7 +192,7 @@ class _RepeatsAndScrolls extends _Repeats {
     if (target != null) {
       target.addEventListener('scroll', this.handleScrollEvent);
       if (target == this._containerElement) {
-        this._sizer = this._sizer || this._createContainerSizer();
+        this._sizer = this._sizer ?? this._createContainerSizer();
         this._container.prepend(this._sizer);
       }
     }
@@ -220,7 +220,7 @@ class _RepeatsAndScrolls extends _Repeats {
       }
       // Update scroll size and correct scroll error before rendering.
       this._sizeContainer(this._scrollSize);
-      if (this._scrollErr) {
+      if (this._scrollErr != null) {
         // This triggers a 'scroll' event (async) which triggers another
         // _updateView().
         this._correctScrollError(this._scrollErr);
@@ -253,9 +253,9 @@ class _RepeatsAndScrolls extends _Repeats {
   }
 
   handleScrollEvent(event) {
-            if (this._scrollTarget == null || event.target == this._scrollTarget) {
-          this._scheduleUpdateView();
-        }
+    if (this._scrollTarget == null || event.target == this._scrollTarget) {
+      this._scheduleUpdateView();
+    }
   }
 
   /**
@@ -313,7 +313,7 @@ class _RepeatsAndScrolls extends _Repeats {
   /**
    * @protected
    */
-  get _kids {
+  List<Element> get _kids {
     return this._ordered;
   }
 
@@ -378,8 +378,10 @@ class _RepeatsAndScrolls extends _Repeats {
       this._sizer.style.transform = 'translate(${left}px, ${top}px)';
     } else {
       var style = this._containerElement.style;
-      style.minWidth = size != null && size.width ? size.width + 'px' : null;
-      style.minHeight = size != null && size.height ? size.height + 'px' : null;
+      style.minWidth =
+          size != null && size.width != null ? size.width.toString() + 'px' : null;
+      style.minHeight =
+          size != null && size.height != null ? size.height.toString() + 'px' : null;
     }
   }
 
@@ -387,24 +389,15 @@ class _RepeatsAndScrolls extends _Repeats {
    * @private
    */
   _positionChildren(Map<int, Coords> pos) {
-    // TODO
-//    var kids = this._kids;
-//    Object.keys(pos).forEach(key => {
-//    var idx = key - this._first;
-//    var child = kids[idx];
-//    if (child) {
-//    var {top, left} = pos[key];
-//    child.style.position = 'absolute';
-//    child.style.transform = `translate(${left}px, ${top}px)`;
-//    }
-//    });
     var kids = this._kids;
     pos.forEach((k, v) {
       var idx = k - this._first;
-      var child = v;
+      var child = kids[idx];
       if (child != null) {
         var top = pos[k].top;
         var left = pos[k].left;
+        child.style.position = 'absolute';
+        child.style.transform = 'translate(${left}px, ${top}px)';
       }
     });
   }
@@ -460,9 +453,9 @@ class _RepeatsAndScrolls extends _Repeats {
     var first = this.first;
     var num = this.num;
     var last = first + num - 1;
-    this
-        ._container
-        .dispatchEvent(new RangeChangedEvent(first: first, last: last));
+    // TODO: dispatch event
+//    this._container.dispatchEvent(
+//        new Event('rangechange'), {'first': first, 'last': last});
   }
 
   /**
@@ -512,7 +505,7 @@ class _Repeats {
 
   var _container = null;
 
-  List _ordered = [];
+  List<Element> _ordered = <Element>[];
   Map _active = {};
   Map _prevActive = {};
 
@@ -704,7 +697,7 @@ class _Repeats {
 //    return toMeasure;
 //  }, ToMeasure(indices: [], children: []);
 
-    var toMeasure = ToMeasure();
+    var toMeasure = ToMeasure(indices: [], children: []);
     for (var i = 0; i < _ordered.length; i++) {
       var c = _ordered[i];
       var idx = this._first + i;
@@ -777,7 +770,7 @@ class _Repeats {
 
     // Cleanup.
     if (!this._incremental) {
-      this._prevActive.forEach((idx, child) => this._unassignChild(child, idx));
+      this._prevActive.forEach((child, idx) => this._unassignChild(child, idx));
       this._prevActive.clear();
     }
     // Reset internal properties.
@@ -790,7 +783,7 @@ class _Repeats {
     // Notify render completed.
     this._didRender();
     // Measure DOM.
-    if (toMeasure) {
+    if (toMeasure != null) {
       this._measureChildren(toMeasure);
     }
   }
@@ -832,7 +825,7 @@ class _Repeats {
       if (!this._childIsAttached(child)) {
         this._insertBefore(child, this._firstChild);
       }
-      if (this.updateElement) {
+      if (this.updateElement != null) {
         this.updateElement(child, idx);
       }
       this._ordered.insert(0, child);
@@ -850,7 +843,7 @@ class _Repeats {
       if (!this._childIsAttached(child)) {
         this._insertBefore(child, null);
       }
-      if (this.updateElement) {
+      if (this.updateElement != null) {
         this.updateElement(child, idx);
       }
       this._ordered.add(child);
@@ -868,7 +861,7 @@ class _Repeats {
     this._active = this._prevActive;
     this._prevActive = prevActive;
 
-    this._ordered.length = 0;
+    this._ordered.clear();
     var currentMarker = this._firstChild;
     for (var i = first; i <= last; i++) {
       var child = this._assignChild(i);
@@ -895,9 +888,9 @@ class _Repeats {
    * @private
    */
   _assignChild(idx) {
-    var key = this.elementKey ? this.elementKey(idx) : idx;
-    var child;
-    if (child = this._keyToChild[key]) {
+    var key = this.elementKey != null ? this.elementKey(idx) : idx;
+    var child = this._keyToChild[key];
+    if (child != null) {
       this._prevActive.remove(child);
     } else {
       child = this.createElement(idx);
@@ -924,7 +917,7 @@ class _Repeats {
       this._childToKey.remove(child);
       this._keyToChild.remove(key);
       this._active.remove(child);
-      if (this.recycleElement) {
+      if (this.recycleElement != null) {
         this.recycleElement(child, idx);
       } else if (this._node(child).parentNode) {
         this._removeChild(child);
@@ -981,14 +974,14 @@ class _Repeats {
    */
   _childIsAttached(child) {
     var node = this._node(child);
-    return node && node.parentNode == this._container;
+    return node != null && node.parentNode == this._container;
   }
 
   /**
    * @protected
    */
   _hideChild(child) {
-    if (child.style) {
+    if (child.style != null) {
       child.style.display = 'none';
     }
   }
@@ -996,9 +989,9 @@ class _Repeats {
   /**
    * @protected
    */
-  _showChild(child) {
-    if (child.style) {
-      child.style.display = null;
+  _showChild(Element child) {
+    if (child.style != null) {
+      child.style.removeProperty('display');
     }
   }
 
@@ -1020,7 +1013,8 @@ class _Repeats {
     var rect = child.getBoundingClientRect();
     var width = rect.width;
     var height = rect.height;
-//    return Object.assign({width, height}, getMargins(child));
+    var margins = getMargins(child);
+    return Rectangle(margins.marginLeft, margins.marginRight, width, height);
   }
 }
 
@@ -1038,7 +1032,7 @@ num getMarginValue(String value) {
   // TODO handle edge cases?
 //  value = value ? parseFloat(value) : NaN;
 //  return Number.isNaN(value) ? 0 : value;
-  return double.parse(value);
+  return double.parse(value.replaceAll('px', ''));
 }
 
 ///////////////////////////////////////////////////////////////////////////////

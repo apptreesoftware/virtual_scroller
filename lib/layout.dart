@@ -29,28 +29,28 @@ class Layout extends Layout1dBase {
   bool hasUpdateItemSizesFn = true;
   updateItemSizes(Map<int, Rectangle> sizes) {
     sizes.keys.forEach((key) {
-      var metrics = sizes[key], mi = this._getMetrics(key),
+      var metrics = sizes[key],
+          mi = this._getMetrics(key),
           prevSize = mi[this._sizeDim];
 
       // TODO(valdrin) Handle margin collapsing.
       // https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Box_Model/Mastering_margin_collapsing
-      mi.width = metrics.width + (metrics.left ?? 0) +
-          (metrics.right ?? 0);
-      mi.height = metrics.height + (metrics.top ?? 0) +
-          (metrics.bottom ?? 0);
+      mi['width'] = metrics.width + (metrics.left ?? 0) + (metrics.right ?? 0);
+      mi['height'] =
+          metrics.height + (metrics.top ?? 0) + (metrics.bottom ?? 0);
 
       int size;
       if (this._sizeDim == "height") {
-        size = mi.height;
+        size = mi['height'];
       } else {
-        size = mi.width;
+        size = mi['width'];
       }
       var item = this._getPhysicalItem(key);
-      if (item) {
+      if (item != null) {
         var delta;
 
         if (size != null) {
-          item.size = size;
+          item['size'] = size;
           if (prevSize == null) {
             delta = size;
             this._nMeasured++;
@@ -62,10 +62,10 @@ class Layout extends Layout1dBase {
       }
     });
     if (this._nMeasured == null) {
-    print("No items measured yet.");
+      print("No items measured yet.");
     } else {
-    this._updateItemSize();
-    this._scheduleReflow();
+      this._updateItemSize();
+      this._scheduleReflow();
     }
   }
 
@@ -76,7 +76,6 @@ class Layout extends Layout1dBase {
     } else {
       this._itemSize.width = (this._tMeasured / this._nMeasured).round();
     }
-
   }
 
   _getMetrics(idx) {
@@ -84,17 +83,17 @@ class Layout extends Layout1dBase {
   }
 
   _getPhysicalItem(int idx) {
-    return this._newPhysicalItems[idx] || this._physicalItems[idx];
+    return this._newPhysicalItems[idx] ?? this._physicalItems[idx];
   }
 
   _getSize(idx) {
     var item = this._getPhysicalItem(idx);
-    return item && item.size;
+    return item != null ? item['size'] : null;
   }
 
   _getPosition(idx) {
     var item = this._physicalItems[idx];
-    return item ? item.pos : (idx * (this._delta)) + this._spacing;
+    return item != null ? item['pos'] : (idx * (this._delta)) + this._spacing;
   }
 
   _calculateAnchor(int lower, int upper) {
@@ -106,8 +105,7 @@ class Layout extends Layout1dBase {
     }
     return math.max(
         0,
-        math.min(
-            this._totalItems - 1,
+        math.min(this._totalItems - 1,
             (((lower + upper) / 2) / this._delta).floor()));
   }
 
@@ -126,8 +124,10 @@ class Layout extends Layout1dBase {
 
     var firstItem = this._getPhysicalItem(this._first),
         lastItem = this._getPhysicalItem(this._last),
-        firstMin = firstItem.pos, firstMax = firstMin + firstItem.size,
-        lastMin = lastItem.pos, lastMax = lastMin + lastItem.size;
+        firstMin = firstItem['pos'],
+        firstMax = firstMin + firstItem['size'],
+        lastMin = lastItem['pos'],
+        lastMax = lastMin + lastItem['size'];
 
     if (lastMax < lower) {
       // Window is entirely past physical items, calculate new anchor
@@ -151,7 +151,8 @@ class Layout extends Layout1dBase {
     while (true) {
       var candidateIdx = ((maxIdx + minIdx) / 2).round(),
           candidate = this._physicalItems[candidateIdx],
-          cMin = candidate.pos, cMax = cMin + candidate.size;
+          cMin = candidate.pos,
+          cMax = cMin + candidate.size;
 
       if ((cMin >= lower && cMin <= upper) ||
           (cMax >= lower && cMax <= upper)) {
@@ -168,9 +169,8 @@ class Layout extends Layout1dBase {
     if (this._viewDim1 == 0 || this._totalItems == 0) {
       this._clearItems();
     } else {
-      var upper = math.min(
-          this._scrollSize,
-          this._scrollPosition + this._viewDim1 + this._overhang),
+      var upper = math.min(this._scrollSize,
+              this._scrollPosition + this._viewDim1 + this._overhang),
           lower = math.max(0, upper - this._viewDim1 - (2 * this._overhang));
 
       this._getItems(lower, upper);
@@ -225,7 +225,7 @@ class Layout extends Layout1dBase {
     }
 
     // TODO use class?
-    items[this._anchorIdx]= {'pos': this._anchorPos, 'size': anchorSize};
+    items[this._anchorIdx] = {'pos': this._anchorPos, 'size': anchorSize};
 
     this._first = (this._last = this._anchorIdx);
     this._physicalMin = (this._physicalMax = this._anchorPos);
@@ -238,9 +238,9 @@ class Layout extends Layout1dBase {
         this._stable = false;
         size = this._itemDim1;
       }
-       var pos = (this._physicalMin -= size + this._spacing);
+      var pos = (this._physicalMin -= size + this._spacing);
       // TODO: use class?
-      items[this._first]= {'pos': pos, 'size': size};
+      items[this._first] = {'pos': pos, 'size': size};
       if (this._stable == false && this._estimate == false) {
         break;
       }
@@ -264,7 +264,7 @@ class Layout extends Layout1dBase {
 
     // This handles the cases where we were relying on estimated sizes.
     var extentErr = this._calculateError();
-    if (extentErr) {
+    if (extentErr != null) {
       this._physicalMin -= extentErr;
       this._physicalMax -= extentErr;
       this._anchorPos -= extentErr;
@@ -288,9 +288,8 @@ class Layout extends Layout1dBase {
     } else if (this._last == this._maxIdx) {
       return this._physicalMax - this._scrollSize;
     } else if (this._physicalMax >= this._scrollSize) {
-      return (
-          (this._physicalMax - this._scrollSize) +
-              ((this._totalItems - 1 - this._last) * this._delta));
+      return ((this._physicalMax - this._scrollSize) +
+          ((this._totalItems - 1 - this._last) * this._delta));
     }
     return 0;
   }
@@ -314,21 +313,21 @@ class Layout extends Layout1dBase {
     this._scrollIfNeeded();
 
     if (this._scrollSize != _scrollSize) {
-    this._emitScrollSize();
+      this._emitScrollSize();
     }
 
     this._emitRange(null);
     if (this._first == -1 && this._last == -1) {
-    this._resetReflowState();
-    } else if (
-    this._first != _first || this._last != _last ||
-    this._needsRemeasure) {
-    this._emitChildPositions();
-    this._emitScrollError();
+      this._resetReflowState();
+    } else if (this._first != _first ||
+        this._last != _last ||
+        this._needsRemeasure) {
+      this._emitChildPositions();
+      this._emitScrollError();
     } else {
-    this._emitChildPositions();
-    this._emitScrollError();
-    this._resetReflowState();
+      this._emitChildPositions();
+      this._emitScrollError();
+      this._resetReflowState();
     }
   }
 
@@ -405,10 +404,17 @@ class Layout1dBase {
   bool _spacingChanged = false;
 
   // TODO: correct?
-  Layout1dBase({direction, overhang});
+  Layout1dBase({direction, overhang}) {
+    if (direction != null) {
+      this.direction = direction;
+    }
+    if (overhang != null) {
+      this._overhang = overhang;
+    }
+  }
 
   bool hasUpdateItemSizesFn = false;
-  updateItemSizes(Map<int, Rectangle> sizes){}
+  updateItemSizes(Map<int, Rectangle> sizes) {}
 
   // public properties
 
@@ -651,8 +657,17 @@ class Layout1dBase {
   }
 
   _emitRange(inProps) {
-    this.dispatchEvent(new RangeChangedEvent(
-        first: _first, last: _last, num: _num, stable: true));
+    var evt = new RangeChangedEvent(
+        first: _first, last: _last, num: _num, stable: true);
+    if (inProps != null) {
+      if (inProps['stable'] != null) {
+        evt.stable = inProps['stable'];
+      }
+      if (inProps['remeasure'] != null) {
+        evt.remeasure = inProps['remeasure'];
+      }
+    }
+    this.dispatchEvent(evt);
   }
 
   _emitScrollSize() {
@@ -675,7 +690,7 @@ class Layout1dBase {
   }
 
   _emitChildPositions() {
-    var detail = {};
+    var detail = <int, Coords>{};
     for (var idx = this._first; idx <= this._last; idx++) {
       detail[idx] = this._getItemPosition(idx);
     }
