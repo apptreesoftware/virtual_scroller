@@ -62,6 +62,24 @@ class Margin {
     this.marginBottom,
     this.marginLeft,
   });
+  String toString() => "$marginTop $marginRight $marginBottom $marginLeft";
 }
 
 class ScrollEvent implements VSEvent {}
+
+class Metrics {
+  int height;
+  int width;
+  int marginTop;
+  int marginBottom;
+  int marginLeft;
+  int marginRight;
+  Metrics({
+    this.height,
+    this.width,
+    this.marginTop,
+    this.marginBottom,
+    this.marginLeft,
+    this.marginRight,
+  });
+}

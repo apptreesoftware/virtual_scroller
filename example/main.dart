@@ -11,7 +11,8 @@ class Sample {
   Layout layout;
   Element container;
   VirtualScroller scroller;
-  List<Element> pool = [];
+  List<Element> headerPool = [];
+  List<Element> contactPool = [];
 
   Sample() {
     items = [];
@@ -30,8 +31,11 @@ class Sample {
       createElement: (idx) {
         var item = items[idx];
         var type = item.runtimeType;
-        if (pool.isNotEmpty) {
-          return pool.removeLast();
+        if (type == Contact && contactPool.isNotEmpty) {
+          return contactPool.removeLast();
+        }
+        if (type == Header && headerPool.isNotEmpty) {
+          return headerPool.removeLast();
         }
         if (type == Contact) {
           var card = document.createElement('div');
@@ -62,9 +66,15 @@ class Sample {
         var item = items[idx];
         if (item.runtimeType == Contact) {
           var item = this.items[idx];
-          child.querySelector('b').text =
+          var b =child.querySelector('b');
+          var p =child.querySelector('p');
+          if (b == null || p == null) {
+            print("updating $child for contact without p or p elements");
+            return;
+          }
+          b.text =
           '${item.index} - ${item.first} ${item.last}';
-          child.querySelector('p').text = item.longText;
+          p.text = item.longText;
         } else {
           child.text = (item as Header).title;
         }
@@ -72,10 +82,18 @@ class Sample {
       recycleElement: (child, idx) {
         var item = items[idx];
         if (item.runtimeType == Contact) {
+          var b =child.querySelector('b');
+          var p =child.querySelector('p');
+          if (b == null || p == null) {
+            print("recycling $child for contact without p or p elements");
+            return;
+          }
           child.querySelector('b').text = '';
           child.querySelector('p').text = '';
+          this.contactPool.add(child);
+        } else {
+          this.headerPool.add(child);
         }
-        this.pool.add(child);
       },
     );
   }
@@ -90,19 +108,20 @@ class Sample {
     var data = json.decode(body) as List;
     var contacts = data.map((d) => Contact.fromJson(d));
     var sorted = contacts.toList()..sort((a, b) => a.last.compareTo(b.last));
+    List result = [];
 
     // add headers
     String prev;
     for (var item in sorted) {
      var cur = item.last.substring(0,1);
      if (prev != cur) {
-       items.add(Header(title: cur));
+       result.add(Header(title: cur));
      }
-     items.add(item);
+     result.add(item);
      prev = cur;
     }
 
-    items = sorted;
+    items = result;
     render();
   }
 }

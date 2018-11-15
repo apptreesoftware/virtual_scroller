@@ -378,10 +378,12 @@ class _RepeatsAndScrolls extends _Repeats {
       this._sizer.style.transform = 'translate(${left}px, ${top}px)';
     } else {
       var style = this._containerElement.style;
-      style.minWidth =
-          size != null && size.width != null ? size.width.toString() + 'px' : null;
-      style.minHeight =
-          size != null && size.height != null ? size.height.toString() + 'px' : null;
+      style.minWidth = size != null && size.width != null
+          ? size.width.toString() + 'px'
+          : null;
+      style.minHeight = size != null && size.height != null
+          ? size.height.toString() + 'px'
+          : null;
     }
   }
 
@@ -390,7 +392,7 @@ class _RepeatsAndScrolls extends _Repeats {
    */
   _positionChildren(Map<int, Coords> pos) {
     var kids = this._kids;
-    pos.forEach((k, v) {
+    pos.keys.forEach((k) {
       var idx = k - this._first;
       var child = kids[idx];
       if (child != null) {
@@ -398,6 +400,7 @@ class _RepeatsAndScrolls extends _Repeats {
         var left = pos[k].left;
         child.style.position = 'absolute';
         child.style.transform = 'translate(${left}px, ${top}px)';
+//        print("first = $_first idx = $idx ${child.style.transform}");
       }
     });
   }
@@ -480,6 +483,7 @@ class _RepeatsAndScrolls extends _Repeats {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+typedef MeasureCallback(Map<int, Metrics> map);
 
 class _Repeats {
   var _createElementFn = null;
@@ -487,7 +491,7 @@ class _Repeats {
   var _recycleElementFn = null;
   var _elementKeyFn = null;
 
-  Function _measureCallback = null;
+  MeasureCallback _measureCallback = null;
 
   var _totalItems = 0;
   // Consider renaming this. count? visibleElements?
@@ -514,7 +518,7 @@ class _Repeats {
   Map _childToKey = {};
 
   // Used to keep track of measures by index.
-  Map _indexToMeasure = {};
+  Map<int, Metrics> _indexToMeasure = {};
 
   bool __incremental = false;
 
@@ -718,7 +722,7 @@ class _Repeats {
    * @private
    */
   _measureChildren(ToMeasure toMeasure) {
-    List pm = [];
+    var pm = <Metrics>[];
     for (var i = 0; i < toMeasure.children.length; i++) {
       var c = toMeasure.children[i];
       if (_indexToMeasure.containsKey(i)) {
@@ -728,7 +732,7 @@ class _Repeats {
       }
     }
 
-    var mm = <int, Rectangle>{};
+    var mm = <int, Metrics>{};
     for (var i = 0; i < pm.length; i++) {
       var cur = pm[i];
       mm[toMeasure.indices[i]] =
@@ -1007,32 +1011,44 @@ class _Repeats {
    * }} childMeasures
    * @protected
    */
-  Rectangle _measureChild(Element child) {
+  Metrics _measureChild(Element child) {
     // offsetWidth doesn't take transforms in consideration, so we use
     // getBoundingClientRect which does.
     var rect = child.getBoundingClientRect();
     var width = rect.width;
     var height = rect.height;
     var margins = getMargins(child);
-    return Rectangle(margins.marginLeft, margins.marginRight, width, height);
+    var result =
+        Rectangle(margins.marginLeft, margins.marginRight, width, height);
+//    print("measureChild = $result");
+    return Metrics(
+      marginLeft: margins.marginLeft,
+      marginRight: margins.marginRight,
+      width: width,
+      height: height,
+      marginTop: margins.marginTop,
+      marginBottom: margins.marginBottom,
+    );
   }
 }
 
 Margin getMargins(Element el) {
   var style = el.getComputedStyle();
-  return Margin(
-    marginTop: getMarginValue(style.marginTop),
-    marginRight: getMarginValue(style.marginRight),
-    marginBottom: getMarginValue(style.marginBottom),
-    marginLeft: getMarginValue(style.marginLeft),
+  var margin = Margin(
+    marginTop: getMarginValue(style.marginTop).round(),
+    marginRight: getMarginValue(style.marginRight).round(),
+    marginBottom: getMarginValue(style.marginBottom).round(),
+    marginLeft: getMarginValue(style.marginLeft).round(),
   );
+  return margin;
 }
 
 num getMarginValue(String value) {
   // TODO handle edge cases?
 //  value = value ? parseFloat(value) : NaN;
 //  return Number.isNaN(value) ? 0 : value;
-  return double.parse(value.replaceAll('px', ''));
+  var result = double.parse(value.replaceAll('px', ''));
+  return result;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

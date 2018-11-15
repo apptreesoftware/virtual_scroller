@@ -27,7 +27,7 @@ class Layout extends Layout1dBase {
   }) : super(direction: direction, overhang: overhang) {}
 
   bool hasUpdateItemSizesFn = true;
-  updateItemSizes(Map<int, Rectangle> sizes) {
+  updateItemSizes(Map<int, Metrics> sizes) {
     sizes.keys.forEach((key) {
       var metrics = sizes[key],
           mi = this._getMetrics(key),
@@ -35,9 +35,9 @@ class Layout extends Layout1dBase {
 
       // TODO(valdrin) Handle margin collapsing.
       // https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Box_Model/Mastering_margin_collapsing
-      mi['width'] = metrics.width + (metrics.left ?? 0) + (metrics.right ?? 0);
+      mi['width'] = metrics.width + (metrics.marginLeft ?? 0) + (metrics.marginRight ?? 0);
       mi['height'] =
-          metrics.height + (metrics.top ?? 0) + (metrics.bottom ?? 0);
+          metrics.height + (metrics.marginTop ?? 0) + (metrics.marginBottom ?? 0);
 
       int size;
       if (this._sizeDim == "height") {
@@ -93,7 +93,15 @@ class Layout extends Layout1dBase {
 
   _getPosition(idx) {
     var item = this._physicalItems[idx];
-    return item != null ? item['pos'] : (idx * (this._delta)) + this._spacing;
+    var result =
+        item != null ? item['pos'] : (idx * (this._delta)) + this._spacing;
+//    print("item = ${item}");
+//    print("idx  = ${idx}");
+//    print("delta = ${_delta}");
+//    print("idx * delta  = ${idx * this._delta}");
+//    print("spacing  = ${_spacing}");
+//    print("position for item ${idx} = $result");
+    return result;
   }
 
   _calculateAnchor(int lower, int upper) {
@@ -414,7 +422,7 @@ class Layout1dBase {
   }
 
   bool hasUpdateItemSizesFn = false;
-  updateItemSizes(Map<int, Rectangle> sizes) {}
+  updateItemSizes(Map<int, Metrics> sizes) {}
 
   // public properties
 
