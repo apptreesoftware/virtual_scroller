@@ -1,4 +1,6 @@
-An absolute bare-bones web app.
+# virtual_scroller
 
-Created from templates made available by Stagehand under a BSD-style
-[license](https://github.com/dart-lang/stagehand/blob/master/LICENSE).
+A Dart implementation of [virtual-scroller]() by Valdrin Koshi
+([@valdrinkoshi](https://github.com/valdrinkoshi))
+
+[virtual-scroller]: https://github.com/valdrinkoshi/virtual-scroller
