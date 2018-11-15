@@ -1,7 +1,7 @@
 name: virtual_scroller
 description: >
   A Dart implementation of virtual-scroller by Valdrin Koshi (@valdrinkoshi)
-version: 0.0.1
+version: 0.0.1+1
 authors:
 - John Ryan <john.p.ryan4@gmail.com>
 homepage: https://github.com/apptreesoftware/virtual_scroller
