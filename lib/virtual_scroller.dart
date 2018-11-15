@@ -871,7 +871,7 @@ class _Repeats {
       var child = this._assignChild(i);
       this._ordered.add(child);
 
-      if (currentMarker) {
+      if (currentMarker != null) {
         if (currentMarker == this._node(child)) {
           currentMarker = this._nextSibling(child);
         } else {
@@ -881,7 +881,7 @@ class _Repeats {
         this._insertBefore(child, null);
       }
 
-      if (this.updateElement) {
+      if (this.updateElement != null) {
         this.updateElement(child, i);
       }
     }
