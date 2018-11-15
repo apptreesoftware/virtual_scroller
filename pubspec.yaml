@@ -1,11 +1,12 @@
 name: virtual_scroller
-description: An absolute bare-bones web app.
+description: >
+  A Dart implementation of virtual-scroller by Valdrin Koshi (@valdrinkoshi)
 
 environment:
   sdk: '>=2.0.0 <3.0.0'
 
 dependencies:
-  meta: any
+  meta: ^1.1.6
 
 dev_dependencies:
   build_runner: ^0.10.0
