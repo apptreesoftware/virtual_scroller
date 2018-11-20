@@ -2,23 +2,23 @@
 import 'package:meta/meta.dart';
 
 class Coords {
-  final int left;
-  final int top;
+  final num left;
+  final num top;
   Coords({this.left, this.top});
   String toString() => "[left $left, top $top]";
 }
 
 class Size {
-  int width;
-  int height;
+  num width;
+  num height;
   Size({this.width, this.height});
 }
 
 class VSEvent {}
 
 class ScrollSizeChangedEvent implements VSEvent {
-  int height;
-  int width;
+  num height;
+  num width;
   ScrollSizeChangedEvent({this.height, this.width});
 }
 
@@ -38,7 +38,7 @@ class RangeChangedEvent implements VSEvent {
 }
 
 class ItemPositionChangedEvent implements VSEvent {
-  Map<int, Coords> indexToPos = {};
+  Map<num, Coords> indexToPos = {};
   ItemPositionChangedEvent(this.indexToPos);
 }
 
@@ -52,10 +52,10 @@ class ToMeasure {
 }
 
 class Margin {
-  int marginTop;
-  int marginRight;
-  int marginBottom;
-  int marginLeft;
+  num marginTop;
+  num marginRight;
+  num marginBottom;
+  num marginLeft;
   Margin({
     this.marginTop,
     this.marginRight,
@@ -68,12 +68,12 @@ class Margin {
 class ScrollEvent implements VSEvent {}
 
 class Metrics {
-  int height;
-  int width;
-  int marginTop;
-  int marginBottom;
-  int marginLeft;
-  int marginRight;
+  num height;
+  num width;
+  num marginTop;
+  num marginBottom;
+  num marginLeft;
+  num marginRight;
   Metrics({
     this.height,
     this.width,

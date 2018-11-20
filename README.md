@@ -13,3 +13,9 @@ A Dart implementation of [virtual-scroller]() by Valdrin Koshi
 [angulardart-example]: https://github.com/johnpryan/virtual_scroller_dart_example
 
 
+
+## ResizeObserver
+
+It is recommended to use a [polyfill for
+ResizeObserver](https://github.com/que-etc/resize-observer-polyfill) due to
+[browser incompatability](https://caniuse.com/#feat=resizeobserver)

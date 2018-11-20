@@ -329,7 +329,7 @@ class _RepeatsAndScrolls extends _Repeats {
    * @private
    */
   _updateView() {
-    var width, height, top, left;
+    num width, height, top, left;
     if (this._scrollTarget == this._containerElement) {
       width = this._containerSize.width;
       height = this._containerSize.height;
