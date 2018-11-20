@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:html';
+import 'dart:js';
 import 'dart:math' as math;
 
 import 'package:meta/meta.dart';
@@ -33,7 +34,7 @@ class _RepeatsAndScrolls extends _Repeats {
     @required updateElement,
     @required recycleElement,
   }) {
-    _childrenRO = ResizeObserver((entries, _) => _childrenSizeChanged());
+    _childrenRO = ResizeObserver(allowInterop(_handleChildrenSizeChanged));
     _num = 0;
     _first = -1;
     _last = -1;
@@ -56,16 +57,28 @@ class _RepeatsAndScrolls extends _Repeats {
     // restored when container is changed.
     _containerInlineStyle = null;
     _containerSize = null;
-    _containerRO = ResizeObserver((entries, _) {
-      var rect = entries[0].contentRect;
-      _containerSizeChanged(Size(width: rect.width, height: rect.height));
-    });
+    _containerRO = ResizeObserver(allowInterop(_handleContainerSizeChanged));
 
     this.container = container;
     this.createElement = createElement;
     this.updateElement = updateElement;
     this.recycleElement = recycleElement;
     this.layout = layout;
+  }
+
+  void _handleChildrenSizeChanged(entries, observer) {
+    _childrenSizeChanged();
+  }
+
+  void _handleContainerSizeChanged(entries, observer) {
+    if (entries == null) {
+      return;
+    }
+
+    if (entries is List) {
+      var rect = entries[0].contentRect;
+      _containerSizeChanged(Size(width: rect.width, height: rect.height));
+    }
   }
 
   get container {
@@ -263,31 +276,17 @@ class _RepeatsAndScrolls extends _Repeats {
    * @private
    */
   handleEvent(VSEvent event) {
-    switch (event.runtimeType) {
-      // moved to handleScrollEvent
-//      case ScrollEvent:
-//        if (this._scrollTarget == null || event.target == this._scrollTarget) {
-//          this._scheduleUpdateView();
-//        }
-//        break;
-      case ScrollSizeChangedEvent:
-        var evt = (event as ScrollSizeChangedEvent);
-        this._scrollSize = Size(width: evt.width, height: evt.height);
-        this._scheduleRender();
-        break;
-//      case ScrollErr:
-//        this._scrollErr = event.detail;
-//        this._scheduleRender();
-//        break;
-      case ItemPositionChangedEvent:
-        this._childrenPos = (event as ItemPositionChangedEvent).indexToPos;
-        this._scheduleRender();
-        break;
-      case RangeChangedEvent:
-        this._adjustRange((event as RangeChangedEvent));
-        break;
-      default:
-        print('event not handled $event');
+    if (event is ScrollSizeChangedEvent) {
+      var evt = (event as ScrollSizeChangedEvent);
+      this._scrollSize = Size(width: evt.width, height: evt.height);
+      this._scheduleRender();
+    } else if (event is ItemPositionChangedEvent) {
+      this._childrenPos = (event as ItemPositionChangedEvent).indexToPos;
+      this._scheduleRender();
+    } else if (event is RangeChangedEvent) {
+      this._adjustRange((event as RangeChangedEvent));
+    } else {
+      print('event not handled $event');
     }
   }
 
