@@ -64,7 +64,6 @@ class Layout extends Layout1dBase {
       }
     });
     if (this._nMeasured == null) {
-      print("No items measured yet.");
     } else {
       this._updateItemSize();
       this._scheduleReflow();
@@ -97,16 +96,10 @@ class Layout extends Layout1dBase {
     var item = this._physicalItems[idx];
     var result =
         item != null ? item['pos'] : (idx * (this._delta)) + this._spacing;
-//    print("item = ${item}");
-//    print("idx  = ${idx}");
-//    print("delta = ${_delta}");
-//    print("idx * delta  = ${idx * this._delta}");
-//    print("spacing  = ${_spacing}");
-//    print("position for item ${idx} = $result");
     return result;
   }
 
-  _calculateAnchor(int lower, int upper) {
+  _calculateAnchor(num lower, num upper) {
     if (lower == 0) {
       return 0;
     }
@@ -119,16 +112,14 @@ class Layout extends Layout1dBase {
             (((lower + upper) / 2) / this._delta).floor()));
   }
 
-  _getAnchor(lower, upper) {
+  _getAnchor(num lower, num upper) {
     if (this._physicalItems['size'] == 0) {
       return this._calculateAnchor(lower, upper);
     }
     if (this._first < 0) {
-      print('_getAnchor: negative _first');
       return this._calculateAnchor(lower, upper);
     }
     if (this._last < 0) {
-      print('_getAnchor: negative _last');
       return this._calculateAnchor(lower, upper);
     }
 
