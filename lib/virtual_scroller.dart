@@ -156,12 +156,7 @@ class _RepeatsAndScrolls extends _Repeats {
     if (this._layout != null) {
       this._measureCallback = null;
 
-      // TODO: Layout can't extend EventTarget
       _layoutSubscription?.cancel();
-//      this._layout.removeEventListener('scrollsizechange', this);
-//      this._layout.removeEventListener('scrollerrorchange', this);
-//      this._layout.removeEventListener('itempositionchange', this);
-//      this._layout.removeEventListener('rangechange', this);
       // Reset container size so layout can get correct viewport size.
       if (this._containerElement != null) {
         this._sizeContainer(null);
@@ -171,34 +166,22 @@ class _RepeatsAndScrolls extends _Repeats {
     this._layout = layout;
 
     if (this._layout != null) {
-      // TODO: layout.updateItemSizes
       if (this._layout.hasUpdateItemSizesFn) {
         this._measureCallback = this._layout.updateItemSizes;
         this.requestRemeasure();
       }
-      // TODO: Layout can't extend EventTarget
       _layoutSubscription = _layout.onEvent.listen(handleEvent);
-//      this._layout.addEventListener('scrollsizechange', this);
-//      this._layout.addEventListener('scrollerrorchange', this);
-//      this._layout.addEventListener('itempositionchange', this);
-//      this._layout.addEventListener('rangechange', this);
       this._scheduleUpdateView();
     }
   }
 
-  /**
-   * The element that generates scroll events and defines the container
-   * viewport. The value `null` (default) corresponds to `window` as scroll
-   * target.
-   * @type {Element|null}
-   */
+  /// The element that generates scroll events and defines the container
+  /// viewport. The value `null` (default) corresponds to `window` as scroll
+  /// target.
   get scrollTarget {
     return this._scrollTarget;
   }
 
-  /**
-   * @param {Element|null} target
-   */
   set scrollTarget(target) {
     // Consider window as null.
     if (target == window) {
@@ -225,9 +208,6 @@ class _RepeatsAndScrolls extends _Repeats {
     }
   }
 
-  /**
-   * @protected
-   */
   _render() {
     this._childrenRO.disconnect();
 
@@ -267,11 +247,8 @@ class _RepeatsAndScrolls extends _Repeats {
     this._kids.forEach((child) => this._childrenRO.observe(child));
   }
 
-  /**
-   * Position children before they get measured. Measuring will force relayout,
-   * so by positioning them first, we reduce computations.
-   * @protected
-   */
+  /// Position children before they get measured. Measuring will force
+  /// relayout, so by positioning them first, we reduce computations.
   _didRender() {
     if (this._childrenPos != null) {
       this._positionChildren(this._childrenPos);
@@ -285,10 +262,6 @@ class _RepeatsAndScrolls extends _Repeats {
     }
   }
 
-  /**
-   * @param {!Event} event
-   * @private
-   */
   handleEvent(VSEvent event) {
     if (event is ScrollSizeChangedEvent) {
       var evt = (event as ScrollSizeChangedEvent);
@@ -304,10 +277,6 @@ class _RepeatsAndScrolls extends _Repeats {
     }
   }
 
-  /**
-   * @return {!Element}
-   * @private
-   */
   _createContainerSizer() {
     var sizer = document.createElement('div');
     // When the scrollHeight is large, the height of this element might be
@@ -322,25 +291,15 @@ class _RepeatsAndScrolls extends _Repeats {
     return sizer;
   }
 
-  // TODO: Rename _ordered to _kids?
-  /**
-   * @protected
-   */
   List<Element> get _kids {
     return this._ordered;
   }
 
-  /**
-   * @private
-   */
   _scheduleUpdateView() {
     this._needsUpdateView = true;
     this._scheduleRender();
   }
 
-  /**
-   * @private
-   */
   _updateView() {
     num width, height, top, left;
     if (this._scrollTarget == this._containerElement) {
@@ -400,9 +359,6 @@ class _RepeatsAndScrolls extends _Repeats {
     }
   }
 
-  /**
-   * @private
-   */
   _positionChildren(Map<int, Coords> pos) {
     var kids = this._kids;
     pos.keys.forEach((k) {
@@ -413,14 +369,10 @@ class _RepeatsAndScrolls extends _Repeats {
         var left = pos[k].left;
         child.style.position = 'absolute';
         child.style.transform = 'translate(${left}px, ${top}px)';
-//        print("first = $_first idx = $idx ${child.style.transform}");
       }
     });
   }
 
-  /**
-   * @private
-   */
   _adjustRange(RangeChangedEvent range) {
     this.num = range.num;
     this.first = range.first;
@@ -432,9 +384,6 @@ class _RepeatsAndScrolls extends _Repeats {
     }
   }
 
-  /**
-   * @protected
-   */
   _shouldRender() {
     if (!super._shouldRender() || this._layout == null) {
       return false;
@@ -449,9 +398,6 @@ class _RepeatsAndScrolls extends _Repeats {
     return this._containerSize.width > 0 || this._containerSize.height > 0;
   }
 
-  /**
-   * @private
-   */
   _correctScrollError(err) {
     if (this._scrollTarget != null) {
       this._scrollTarget.scrollTop -= err.top;
@@ -461,31 +407,15 @@ class _RepeatsAndScrolls extends _Repeats {
     }
   }
 
-  /**
-   * @protected
-   */
   _notifyStable() {
-    // TODO: dispatch event
-//    var {first, num} = this;
-//    var first = this.first;
-//    var num = this.num;
-//    var last = first + num - 1;
-//    this._container.dispatchEvent(
-//        new Event('rangechange'), {'first': first, 'last': last});
+    // TODO: dispatch rangechange event
   }
 
-  /**
-   * @private
-   */
   _containerSizeChanged(Size size) {
-//    var {width, height} = size;
     this._containerSize = size;
     this._scheduleUpdateView();
   }
 
-  /**
-   * @private
-   */
   _childrenSizeChanged() {
     if (this._skipNextChildrenSizeChanged) {
       this._skipNextChildrenSizeChanged = false;
@@ -495,7 +425,6 @@ class _RepeatsAndScrolls extends _Repeats {
   }
 }
 
-///////////////////////////////////////////////////////////////////////////////
 typedef MeasureCallback(Map<int, Metrics> map);
 
 class _Repeats {
@@ -507,10 +436,8 @@ class _Repeats {
   MeasureCallback _measureCallback = null;
 
   var _totalItems = 0;
-  // Consider renaming this. count? visibleElements?
   int _num = 1000000000; // Infinity
   int _prevNum;
-  // Consider renaming this. firstVisibleIndex?
   int _first = 0;
   int _last = 0;
   int _prevFirst = 0;
@@ -534,8 +461,6 @@ class _Repeats {
   Map<int, Metrics> _indexToMeasure = {};
 
   bool __incremental = false;
-
-  //-------------------------------------
 
   get container {
     return this._container;
@@ -673,18 +598,10 @@ class _Repeats {
     this._scheduleRender();
   }
 
-  // Core functionality
-
-  /**
-   * @protected
-   */
   _shouldRender() {
     return this.container != null && this.createElement != null;
   }
 
-  /**
-   * @private
-   */
   _scheduleRender() {
     if (this._pendingRender == null) {
       this._pendingRender = window.requestAnimationFrame((_) {
@@ -696,24 +613,10 @@ class _Repeats {
     }
   }
 
-  /**
-   * Returns those children that are about to be displayed and that require to
-   * be positioned. If reset or remeasure has been triggered, all children are
-   * returned.
-   * @return {{indices: Array<number>, children: Array<Element>}}
-   * @private
-   */
+  /// Returns those children that are about to be displayed and that require to
+  /// be positioned. If reset or remeasure has been triggered, all children are
+  /// returned.
   get _toMeasure {
-//    return this._ordered.reduce((toMeasure, c) {
-//        var idx = this._first + i;
-//        if (this._needsReset || this._needsRemeasure || idx < this._prevFirst ||
-//        idx > this._prevLast) {
-//      toMeasure.indices.push(idx);
-//      toMeasure.children.push(c);
-//    }
-//    return toMeasure;
-//  }, ToMeasure(indices: [], children: []);
-
     var toMeasure = ToMeasure(indices: [], children: []);
     for (var i = 0; i < _ordered.length; i++) {
       var c = _ordered[i];
@@ -729,11 +632,7 @@ class _Repeats {
     return toMeasure;
   }
 
-  /**
-   * Measures each child bounds and builds a map of index/bounds to be passed
-   * to the `_measureCallback`
-   * @private
-   */
+  /// Measures each child bounds and builds a map of index/bounds to be passed
   _measureChildren(ToMeasure toMeasure) {
     var pm = <Metrics>[];
     for (var i = 0; i < toMeasure.children.length; i++) {
@@ -754,9 +653,6 @@ class _Repeats {
     _measureCallback(mm);
   }
 
-  /**
-   * @protected
-   */
   _render() {
     var rangeChanged =
         this._first != this._prevFirst || this._num != this._prevNum;
@@ -778,6 +674,7 @@ class _Repeats {
     if (this._needsRemeasure || this._needsReset) {
       this._indexToMeasure = {};
     }
+
     // Retrieve DOM to be measured.
     // Do it right before cleanup and reset of properties.
     var shouldMeasure = this._num > 0 &&
@@ -805,15 +702,9 @@ class _Repeats {
     }
   }
 
-  /**
-   * Invoked after DOM is updated, and before it gets measured.
-   * @protected
-   */
+  /// Invoked after DOM is updated, and before it gets measured.
   _didRender() {}
 
-  /**
-   * @private
-   */
   _discardHead() {
     var o = this._ordered;
     for (var idx = this._prevFirst; o.length != 0 && idx < this._first; idx++) {
@@ -821,9 +712,6 @@ class _Repeats {
     }
   }
 
-  /**
-   * @private
-   */
   _discardTail() {
     var o = this._ordered;
     for (var idx = this._prevLast; o.length != 0 && idx > this._last; idx--) {
@@ -831,9 +719,6 @@ class _Repeats {
     }
   }
 
-  /**
-   * @private
-   */
   _addHead() {
     var start = this._first;
     var end = math.min(this._last, this._prevFirst - 1);
@@ -849,9 +734,6 @@ class _Repeats {
     }
   }
 
-  /**
-   * @private
-   */
   _addTail() {
     var start = math.max(this._first, this._prevLast + 1);
     var end = this._last;
@@ -867,11 +749,6 @@ class _Repeats {
     }
   }
 
-  /**
-   * @param {number} first
-   * @param {number} last
-   * @private
-   */
   _reset(first, last) {
     // Explain why swap prevActive with active - affects _assignChild.
     var prevActive = this._active;
@@ -900,10 +777,6 @@ class _Repeats {
     }
   }
 
-  /**
-   * @param {number} idx
-   * @private
-   */
   _assignChild(idx) {
     var key = this.elementKey != null ? this.elementKey(idx) : idx;
     var child = this._keyToChild[key];
@@ -919,11 +792,6 @@ class _Repeats {
     return child;
   }
 
-  /**
-   * @param {*} child
-   * @param {number} idx
-   * @private
-   */
   _unassignChild(child, idx) {
     this._hideChild(child);
     if (this._incremental) {
@@ -942,88 +810,47 @@ class _Repeats {
     }
   }
 
-  // TODO: Is this the right name?
-  /**
-   * @private
-   */
   get _firstChild {
     return this._ordered.length != 0 && this._childIsAttached(this._ordered[0])
         ? this._node(this._ordered[0])
         : null;
   }
 
-  // Overridable abstractions for child manipulation
-
-  /**
-   * @protected
-   */
   _node(child) {
     return child;
   }
 
-  /**
-   * @protected
-   */
   _nextSibling(child) {
     return child.nextSibling;
   }
 
-  /**
-   * @protected
-   */
   _insertBefore(child, referenceNode) {
     this._container.insertBefore(child, referenceNode);
   }
 
-  /**
-   * Remove child.
-   * Override to control child removal.
-   *
-   * @param {*} child
-   * @protected
-   */
+  /// Remove child.
+  /// Override to control child removal.
   _removeChild(child) {
     child.parentNode.removeChild(child);
   }
 
-  /**
-   * @protected
-   */
   _childIsAttached(child) {
     var node = this._node(child);
     return node != null && node.parentNode == this._container;
   }
 
-  /**
-   * @protected
-   */
   _hideChild(child) {
     if (child.style != null) {
       child.style.display = 'none';
     }
   }
 
-  /**
-   * @protected
-   */
   _showChild(Element child) {
     if (child.style != null) {
       child.style.removeProperty('display');
     }
   }
 
-  /**
-   * @param {!Element} child
-   * @return {{
-   *   width: number,
-   *   height: number,
-   *   marginTop: number,
-   *   marginRight: number,
-   *   marginBottom: number,
-   *   marginLeft: number,
-   * }} childMeasures
-   * @protected
-   */
   Metrics _measureChild(Element child) {
     // offsetWidth doesn't take transforms in consideration, so we use
     // getBoundingClientRect which does.
@@ -1055,13 +882,9 @@ Margin getMargins(Element el) {
 
 num getMarginValue(String value) {
   // TODO handle edge cases?
-//  value = value ? parseFloat(value) : NaN;
-//  return Number.isNaN(value) ? 0 : value;
   var result = double.parse(value.replaceAll('px', ''));
   return result;
 }
-
-///////////////////////////////////////////////////////////////////////////////
 
 class VirtualScroller extends _RepeatsAndScrolls {
   VirtualScroller({

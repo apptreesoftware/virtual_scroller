@@ -678,14 +678,7 @@ class Layout1dBase {
   }
 
   _emitScrollError() {
-//    if (this._scrollError != 0) {
-//      const detail = {
-//        [this._positionDim]: this._scrollError,
-//        [this._secondaryPositionDim]: 0,
-//      };
-//      this.dispatchEvent(new CustomEvent('scrollerrorchange', {detail}));
-//      this._scrollError = 0;
-//    }
+    // TODO
   }
 
   _emitChildPositions() {
@@ -696,13 +689,9 @@ class Layout1dBase {
     this.dispatchEvent(ItemPositionChangedEvent(detail));
   }
 
-  _itemDim2Changed() {
-    // Override
-  }
+  _itemDim2Changed() {}
 
-  _viewDim2Changed() {
-    // Override
-  }
+  _viewDim2Changed() {}
 
   _scrollPositionChanged(oldPos, newPos) {
     // When both values are bigger than the max scroll position, keep the
@@ -713,17 +702,13 @@ class Layout1dBase {
     }
   }
 
-  _getActiveItems() {
-    // Override
-  }
+  _getActiveItems() {}
 
   Coords _getItemPosition(idx) {
-    // Override.
     return null;
   }
 
   _getItemSize(idx) {
-    // Override.
     return {
       [this._sizeDim]: this._itemDim1,
       [this._secondarySizeDim]: this._itemDim2,
