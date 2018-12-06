@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:html';
 import 'dart:js';
+import 'package:js/js_util.dart' as js;
 import 'dart:math' as math;
 
 import 'package:meta/meta.dart';
@@ -66,19 +67,32 @@ class _RepeatsAndScrolls extends _Repeats {
     this.layout = layout;
   }
 
-  void _handleChildrenSizeChanged(entries, observer) {
+  void _handleChildrenSizeChanged(entries, [observer]) {
     _childrenSizeChanged();
   }
 
-  void _handleContainerSizeChanged(entries, observer) {
+  void _handleContainerSizeChanged(entries, [observer]) {
     if (entries == null) {
       return;
     }
 
-    if (entries is List) {
-      var rect = entries[0].contentRect;
-      _containerSizeChanged(Size(width: rect.width, height: rect.height));
+    Rectangle rect;
+
+    if (entries is List && entries.length > 0) {
+      var entry = entries[0];
+      if (entry is Element) {
+        rect = entry.getBoundingClientRect();
+      } else if (entry is JsObject) {
+        rect = entry['contentRect'];
+      } else {
+        // assume this browser is using a polyfill
+        // https://github.com/que-etc/resize-observer-polyfill
+        var jsContentRect = js.getProperty(entry, 'contentRect');
+        rect = jsContentRect;
+      }
     }
+
+    _containerSizeChanged(Size(width: rect.width, height: rect.height));
   }
 
   get container {
